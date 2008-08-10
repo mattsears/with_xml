@@ -1,7 +1,7 @@
 = with_xml
 
 A simple plugin for customizing the xml serialization for ActiveRecord objects. It uses 
-simple options declared in the ActiveRecord that allows you to customize the to_xml and
+simple options declared in the ActiveRecord that changes the the to_xml and
 from_xml behavior.
 
 == INSTALLATION
@@ -12,7 +12,6 @@ from_xml behavior.
 
 In general, you can define the xml options in the ActiveRecord object definition.  In this example,
 we set the xml options in the Article class with the following schema:
-
 
 	ActiveRecord::Schema.define(:version => 1) do
 	  create_table :articles do |t|
@@ -25,8 +24,8 @@ In the Article's class, we define the xml serialization options in the +with_xml
 	class Article < ActiveRecord::Base
 	  with_xml :feeds, {:alias => ["magazine", "blog", "newspaper"]} do
 	    bind :heading, :to => ["subject", "title"]
-		bind :body, :to => ["content", "message", "post"]
-		serialize :except => [ :name ], :skip_instruct => true
+	bind :body, :to => ["content", "message", "post"]
+	serialize :except => [ :name ], :skip_instruct => true
 	  end
 	end
 	
@@ -36,12 +35,14 @@ we've specified not to include the :name attribute or the xml instructions in th
  	article.to_xml
 
 ...becomes...
-
-	&lt;article&rt;
-		&lt;author&rt;...&lt;/author&rt;
-		&lt;body&rt;...&lt;/body&rt;
-		&lt;heading&rt;...&lt;/heading&rt;
-	&lt;/article&rt;
+	
+	<tt>
+		<article>
+			<author>...</author>
+			<body>...</body>
+			<heading>...</heading>
+		</article>
+	<tt>
 
 The +bind+ options allows us to set the Article attributes with elements that have different names.  For example, data for our Article class come from blogs, magazine's or newspapers with different xml schemas.  With the +bind+ options in the code above, we can import any of the following xml documents into the Article:
 
