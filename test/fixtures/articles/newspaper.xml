@@ -1,0 +1,6 @@
+<newspaper>
+	<title>The Wall Street Journal</title>
+	<content>This is the content</content>
+	<unknown>There is no field for this element.  It should be ignored.</unknown>
+	<AUTHOR>Caps should be ignored by default</AUTHOR>
+</newspaper>

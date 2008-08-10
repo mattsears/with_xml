@@ -1,0 +1,7 @@
+<root>
+	<description>The article node is not at the root, but with_xml should still be able to find it.</description>
+	<article>
+		<heading>Page Six</heading>
+		<body>Content for article</body>
+	</article>
+</root>
