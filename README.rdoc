@@ -24,8 +24,8 @@ In the Article's class, we define the xml serialization options in the +with_xml
 	class Article < ActiveRecord::Base
 	  with_xml :feeds, {:alias => ["magazine", "blog", "newspaper"]} do
 	    bind :heading, :to => ["subject", "title"]
-	bind :body, :to => ["content", "message", "post"]
-	serialize :except => [ :name ], :skip_instruct => true
+		bind :body, :to => ["content", "message", "post"]
+		serialize :except => [ :name ], :skip_instruct => true
 	  end
 	end
 	
@@ -36,39 +36,37 @@ we've specified not to include the :name attribute or the xml instructions in th
 
 ...becomes...
 	
-	<tt>
-		<article>
-			<author>...</author>
-			<body>...</body>
-			<heading>...</heading>
-		</article>
-	<tt>
+	#<article>
+	#	<author>...</author>
+	#	<body>...</body>
+	#	<heading>...</heading>
+	#</article>
 
 The +bind+ options allows us to set the Article attributes with elements that have different names.  For example, data for our Article class come from blogs, magazine's or newspapers with different xml schemas.  With the +bind+ options in the code above, we can import any of the following xml documents into the Article:
 
 	article.from_xml(xml)
 	
-	<article>
-		<heading>Page Six</heading>
-		<body>Content for article</body>
-	</article>
+	#<article>
+	#	<heading>Page Six</heading>
+	#	<body>Content for article</body>
+	#</article>
+ 	
+	#<magazine>
+	#	<title>The Washington Post</title>
+	#	<content>This is the content</content>
+	#</magazine>
 
-	<magazine>
-		<title>The Washington Post</title>
-		<content>This is the content</content>
-	</magazine>
+	#<blog>
+	#	<title>TechCrunch</title>
+	#	<post>The Post</post>
+	#</blog>
 
-	<blog>
-		<title>TechCrunch</title>
-		<post>The Post</post>
-	</blog>
-
-	<newspaper>
-		<title>The Wall Street Journal</title>
-		<content>This is the content</content>
-		<unknown>There is no field for this element.  It will be ignored.</unknown>
-		<AUTHOR>Caps will be  by default</AUTHOR>
-	</newspaper>
+	#<newspaper>
+	#	<title>The Wall Street Journal</title>
+	#	<content>This is the content</content>
+	#	<unknown>There is no field for this element.  It will be ignored.</unknown>
+	#	<AUTHOR>Caps will be  by default</AUTHOR>
+	#</newspaper>
 
 == LICENSE:
 
