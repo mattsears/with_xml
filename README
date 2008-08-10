@@ -1,0 +1,74 @@
+= with_xml
+
+A simple plugin for customizing the xml serialization of ActiveRecord objects.
+
+== INSTALLATION
+
+	script/plugin install git://github.com/mattsears/with_xml.git
+
+== EXAMPLE USAGE
+
+In general, you can define the xml options in the model's class definition.  In this example,
+we'll set the xml options in the Article class:
+
+	ActiveRecord::Schema.define(:version => 1) do
+	  create_table :articles do |t|
+	    t.string :name, :heading, :body, :author
+	  end
+	end
+	
+In the Article's class, we define the xml serialization options in the <b>with_xml</b> block like so:
+
+	class Article < ActiveRecord::Base
+	  with_xml :feeds, {:alias => ["magazine", "blog", "newspaper"]} do
+	    bind :heading, :to => ["subject", "title"]
+		bind :body, :to => ["content", "message", "post"]
+		serialize :except => [ :name ], :skip_instruct => true
+	  end
+	end
+	
+With the <b>serialize</b> option, the script sets the global options for the <b>to_xml</b> calls.  In the code above,
+we've specified not to include the :name attribute or the xml instructions in the xml return from the <b>to_xml</b> call. 
+
+ 	article.to_xml
+
+...becomes...
+	
+	#<article>
+	#	<author>...</author>
+	#	<body>...</body>
+	#	<heading>...</heading>
+	#</article>
+
+The <b>bind</b> options allows us to set the Article attributes with an xml string that has a different schema.  For example, data for our Article class may come from external sources such as blogs, magazines or newspapers with different xml schemas.  With the <b>bind</b> options in the code above, we can import any of the following xml documents into the Article:
+
+	article.from_xml(xml)
+	
+	#<article>
+	#	<heading>Page Six</heading>
+	#	<body>Content for article</body>
+	#</article>
+ 	
+	#<magazine>
+	#	<title>The Washington Post</title>
+	#	<content>This is the content</content>
+	#</magazine>
+
+	#<blog>
+	#	<title>TechCrunch</title>
+	#	<post>The Post</post>
+	#</blog>
+
+	#<newspaper>
+	#	<title>The Wall Street Journal</title>
+	#	<content>This is the content</content>
+	#	<unknown>There is no field for this element.  It will be ignored.</unknown>
+	#	<AUTHOR>Caps will be  by default</AUTHOR>
+	#</newspaper>
+
+== Contact
+
+Author::     Matt Sears
+Email::      matt@mattsears.com
+Home Page::  http://mattsears.com/code/with_xml/
+License::    MIT Licence (http://www.opensource.org/licenses/mit-license.html)
