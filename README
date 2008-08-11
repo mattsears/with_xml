@@ -1,3 +1,5 @@
+**ALPHA - NOT RELEASE READY**
+
 = with_xml
 
 A simple plugin for customizing the xml serialization of ActiveRecord objects.
@@ -22,8 +24,8 @@ In the Article's class, we define the xml serialization options in the <b>with_x
 	class Article < ActiveRecord::Base
 	  with_xml :feeds, {:alias => ["magazine", "blog", "newspaper"]} do
 	    bind :heading, :to => ["subject", "title"]
-		bind :body, :to => ["content", "message", "post"]
-		serialize :except => [ :name ], :skip_instruct => true
+			bind :body, :to => ["content", "message", "post"]
+			serialize :except => [ :name ], :skip_instruct => true
 	  end
 	end
 	
