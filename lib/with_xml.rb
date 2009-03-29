@@ -1,10 +1,10 @@
-require 'xmlsimple'
+require 'xml'
 
 module WithXml
-  # Customize the xml serialization for ActiveRecord objects. It uses the  with_xml block to 
+
+  # Customize the xml serialization for ActiveRecord objects. It uses the  with_xml block to
   # define options declared in the ActiveRecord that allows for the customization of the to_xml and
   # from_xml call.
-  #
   def self.included(base)
     base.extend ClassMethods
   end
@@ -14,7 +14,7 @@ module WithXml
   end
 
   module ClassMethods
-    
+
     # Specifies the options of handling incoming (from_xml) xml data and serialization (to_xml)
     #
     #   class Article < ActiveRecord::Base
@@ -38,16 +38,15 @@ module WithXml
 
   module InstanceMethods
 
-    ##
     # Override the default from_xml and perform some mapping goodness
+    #  +xml+ string of the xml to import
     def from_xml(xml)
-      mapper = SupportingClasses::Binder.new("<opt>#{xml}</opt>", self)
-      mapped_attributes = mapper.bind
+      mapper = SupportingClasses::Binder.new("#{xml}", self)
+      mapped_attributes = mapper.map
       self.attributes = mapped_attributes if mapped_attributes
       self
     end
-    
-    ##
+
     # Override the default to_xml with our custom options
     def to_xml(options = {}, &block)
       with_xml = self.class.read_inheritable_attribute(:with_xml)
@@ -56,7 +55,7 @@ module WithXml
       end
       super(options, &block)
     end
-    
+
   end
 
   module SupportingClasses
@@ -69,26 +68,25 @@ module WithXml
       attr_reader :serialize_opts
 
       def initialize(name, opts, binder_table, &block)
+        @matchers = []
         @name = name.to_sym
-        @binders = binder_table[@name] = []
+        @binders = binder_table[@name] = {}
         instance_eval(&block) if block
         extract_options!(opts)
       end
 
-      ##
       # Adds each 'bind' option to the binders array
-      def bind(name, xml_attr_opts)
-        @binders << SupportingClasses::XmlAttr.new(name, xml_attr_opts)
+      #  +name+ of the attribute
+      def map(name, xml_attr_opts)
+        @binders[name] = SupportingClasses::XmlAttr.new(name, xml_attr_opts)
       end
 
-      ##
       # Adds the options used to export the xml (to_xml)
       def serialize(opts)
         @serialize_opts = opts
       end
 
-      ##
-      # Return true or false if 
+      # Return true or false if we have a match
       def has_match?(name)
         matchers = @opts[:match] || Array.new
         return true if matchers.find {|n| n == name}
@@ -96,10 +94,12 @@ module WithXml
 
       private
 
+      # Parse options decalared in the with_xml
       def extract_options!(opts)
         return nil if opts.nil?
         @opts = opts
         @matchers = opts[:alias] if opts[:alias]
+        @matchers.collect!{|x| x.to_s}
       end
 
     end
@@ -107,10 +107,13 @@ module WithXml
     class XmlAttr
       attr_reader :name
       attr_reader :matchers
-      
-      def initialize(name, opts)
-        @name, @opts = name, opts
-        @matchers = opts[:to] if opts[:to]
+
+      def initialize(name, opts = {})
+        @matchers = []
+        @name, @opts = name.to_s, opts
+        opts[:to] = [] unless opts[:to]
+        opts[:to].insert(0, name.to_s)
+        @matchers = opts[:to].flatten
       end
     end
 
@@ -123,56 +126,79 @@ module WithXml
         @with_xml.matchers << activerecord.class.class_name.downcase
       end
 
-      ##
       # Creates a new hash map that matches the ActiveRecord fields from the given xml
-      def bind
-        xml_hash =  Hash.from_xml(xml)
-        new_xml = find_hash_for(xml_hash, @with_xml.matchers) do |key, value|
-          break(value)
+      def map
+        xml_attrs = {}
+        return xml_attrs unless valid_xml?(xml)
+
+        activerecord.attributes.each_key do |key|
+          if !@with_xml.binders.has_key?(key.to_sym)
+            @with_xml.binders[key.to_sym] = SupportingClasses::XmlAttr.new(key)
+          end
         end
-        return hash_for(new_xml)
+
+        root_xml = find_root_element(xml)
+        if root_xml
+          xml_attrs = find_attributes_for(root_xml)
+        end
+        return xml_attrs
       end
 
       private
 
-      ##
-      # Searches all the keys (even nested) and returns the first one
-      def find_hash_for(hash, desired_keys, &block)
-        return false unless Hash === hash
-        hash.each_pair do |key, value|
-          if desired_keys.include?(key) || find_hash_for(value, desired_keys, &block)
-            yield(key, value)
-            return true
+      # Determine if the xml is well-formed or not
+      #   +xml+ string to validate
+      def valid_xml?(xml)
+        begin
+          XML::Document.string(xml)
+        rescue Exception
+          return false
+          # Return nil if an exception is thrown
+        end
+      end
+
+      # Based on the aliases, find the root element of the xml document
+      #   +xml+ string that contains the root elements
+      def find_root_element(xml)
+        doc = XML::Document.string(xml)
+        @with_xml.matchers.each do |root|
+          if new_xml = find_element(doc, root)
+            return new_xml
           end
         end
         return false
       end
-      
-      ##
-      # Update the xml hash with the correct keys and values
-      def hash_for(xml)
-        return false unless Hash === xml
-        xml.each do |element_name, element_value|
-          field = field_for(element_name)
-          xml.delete(element_name)
-          if activerecord.has_attribute?(field)
-            xml[field] = element_value.strip unless element_value.nil?
+
+      # Given, the list of :to options, find the first ActiveRecord field that matches the given key
+      def find_attributes_for(element)
+        attrs = {}
+        @with_xml.binders.each do |key, binder|
+          binder.matchers.each do |matcher|
+            if node = find_element(element, matcher)
+              attrs[binder.name] = find_text(node)
+            end
           end
         end
+        return attrs
+      end
+
+      # Find the first element matching the xpath (ignores case)
+      # +doc+ to be searched
+      def find_element(doc, xpath = '/')
+        xml = (doc.find_first("//#{xpath}") ||
+              doc.find_first("//#{xpath.downcase}") ||
+              doc.find_first( "//#{xpath.upcase}"))
         return xml
       end
 
-      ##
-      # Given, the list of :to options, find the first ActiveRecord field that matches the given key
-      def field_for(element)
-        return element unless String === element
-        atrribute_name = element.downcase # ignore case by default
-        @with_xml.binders.each do |binder|
-          if binder.name.to_s == atrribute_name || binder.matchers.include?(atrribute_name)
-            return binder.name
-          end
+      # Find and format each element text
+      def find_text(doc)
+        return if doc.nil?
+        text = ""
+        doc.children.each do |child|
+          text << "#{child.content.strip} " unless child.content.strip.empty?
         end
-        return atrribute_name
+        text.strip
       end
 
     end

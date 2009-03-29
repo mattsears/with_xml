@@ -1,4 +1,8 @@
-<article>
+<ARTICLE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 	<heading>Page Six</heading>
 	<body>Content for article</body>
-</article>
+	<sources>
+		<source>Source 1</source>
+		<source>Source 2</source>
+	</sources>
+</ARTICLE>

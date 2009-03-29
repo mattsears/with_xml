@@ -1,4 +1,9 @@
 <magazine>
 	<title>The Washington Post</title>
-	<content>This is the content</content>
+    <nested>
+      <content type="copy">This is the content</content>
+      <content type="copy2">This is NOT the content</content>
+      <content type="copy3">This is NOT the content</content>
+      <content type="copy4">This is NOT the content</content>
+    </nested>
 </magazine>
