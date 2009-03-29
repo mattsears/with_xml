@@ -1,5 +1,3 @@
-**ALPHA - NOT RELEASE READY**
-
 = with_xml
 
 A simple plugin for customizing the xml serialization of ActiveRecord objects.
@@ -18,7 +16,7 @@ we'll set the xml options in the Article class:
 	    t.string :name, :heading, :body, :author
 	  end
 	end
-	
+
 In the Article's class, we define the xml serialization options in the <b>with_xml</b> block like so:
 
 	class Article < ActiveRecord::Base
@@ -28,14 +26,14 @@ In the Article's class, we define the xml serialization options in the <b>with_x
 			serialize :except => [ :name ], :skip_instruct => true
 	  end
 	end
-	
+
 With the <b>serialize</b> option, the script sets the global options for the <b>to_xml</b> calls.  In the code above,
-we've specified not to include the :name attribute or the xml instructions in the xml return from the <b>to_xml</b> call. 
+we've specified not to include the :name attribute or the xml instructions in the xml return from the <b>to_xml</b> call.
 
  	article.to_xml
 
 ...becomes...
-	
+
 	#<article>
 	#	<author>...</author>
 	#	<body>...</body>
@@ -45,12 +43,12 @@ we've specified not to include the :name attribute or the xml instructions in th
 The <b>bind</b> options allows us to set the Article attributes with an xml string that has a different schema.  For example, data for our Article class may come from external sources such as blogs, magazines or newspapers with different xml schemas.  With the <b>bind</b> options in the code above, we can import any of the following xml documents into the Article:
 
 	article.from_xml(xml)
-	
+
 	#<article>
 	#	<heading>Page Six</heading>
 	#	<body>Content for article</body>
 	#</article>
- 	
+
 	#<magazine>
 	#	<title>The Washington Post</title>
 	#	<content>This is the content</content>
