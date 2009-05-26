@@ -2,9 +2,9 @@ require 'xml'
 
 module WithXml
 
-  # Customize the xml serialization for ActiveRecord objects. It uses the  with_xml block to
-  # define options declared in the ActiveRecord that allows for the customization of the to_xml and
-  # from_xml call.
+  # Customize the xml serialization for ActiveRecord objects. It uses the
+  # with_xml block to define options declared in the ActiveRecord that
+  # allows for the customization of the to_xml and from_xml call.
   def self.included(base)
     base.extend ClassMethods
   end
@@ -15,7 +15,8 @@ module WithXml
 
   module ClassMethods
 
-    # Specifies the options of handling incoming (from_xml) xml data and serialization (to_xml)
+    # Specifies the options of handling incoming (from_xml) xml data and
+    # serialization (to_xml)
     #
     #   class Article < ActiveRecord::Base
     #     with_xml :feed, :to => ["magazine", "blog", "newspaper"] do
@@ -87,6 +88,7 @@ module WithXml
       end
 
       # Return true or false if we have a match
+      #  +name+ of the element to match
       def has_match?(name)
         matchers = @opts[:match] || Array.new
         return true if matchers.find {|n| n == name}
@@ -169,7 +171,8 @@ module WithXml
         return false
       end
 
-      # Given, the list of :to options, find the first ActiveRecord field that matches the given key
+      # Given, the list of :to options, find the first ActiveRecord
+      # field that matches the given key
       def find_attributes_for(element)
         attrs = {}
         @with_xml.binders.each do |key, binder|
@@ -183,7 +186,7 @@ module WithXml
       end
 
       # Find the first element matching the xpath (ignores case)
-      # +doc+ to be searched
+      #  +doc+ to be searched
       def find_element(doc, xpath = '/')
         xml = (doc.find_first("//#{xpath}") ||
               doc.find_first("//#{xpath.downcase}") ||
