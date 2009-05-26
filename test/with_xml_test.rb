@@ -1,12 +1,13 @@
 require File.expand_path(File.dirname(__FILE__) + "/test_helper")
 
-class WithXmlTest < Test::Unit::TestCase
-  fixtures :articles
+class WithXmlTest < ActionController::TestCase
   include TagMatchers
 
   def test_field_override
-    article = articles(:magazine) # bind :heading, :to => ["subject", "title"]
+    article = Article.new
+    article.heading = "New Yorker"
     assert_equal "New Yorker", article.heading
+    # xml should override header
     magazine = load_xml_article("magazine.xml")  #title = "The Washington Post"
     article.from_xml(magazine)
     assert_equal "The Washington Post", article.heading
@@ -39,7 +40,8 @@ class WithXmlTest < Test::Unit::TestCase
   # calling from_xml
 
   def test_field_override
-    article = articles(:magazine) # bind :heading, :to => ["subject", "title"]
+    article = Article.new
+    article.heading = "New Yorker"
     assert_equal "New Yorker", article.heading
     magazine = load_xml_article("magazine.xml")  #title = "The Washington Post"
     article.from_xml(magazine)
@@ -98,7 +100,7 @@ class WithXmlTest < Test::Unit::TestCase
   end
 
   def test_from_xml_with_multiple_nodes
-    article = articles(:magazine)
+    article = Article.new
     magazine = load_xml_article("magazine.xml")  #body = "This is the content"
     article.from_xml(magazine)
     assert_equal "This is the content", article.body
